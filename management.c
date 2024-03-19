@@ -41,6 +41,11 @@ void CustomerLogin();
 void cart(const char *regionName, const char *hotelName);
 int getItemPrice(const char *regionName, const char *hotelName, const char *itemName);
 int getItemTime(const char *regionName, const char *hotelName, const char *itemName);
+bool validateEmail(const char *email);
+bool isMobileNumberExist(const char *mobileNumber);
+bool isValidMobileNumber(const char *mobileNumber);
+bool isEmailExist(const char *email);
+bool loginUser(const char *checkMobileNumber, const char *checkPasswd);
 
 // MAIN CODE:
 int main()
@@ -80,6 +85,7 @@ int main()
     return 0;
 }
 
+// ADMIN CODE
 void adminLogin()
 {
     char username[MAX_USERNAME_LEN];
@@ -131,10 +137,6 @@ admin_login:
                     printf("Entered Region is invalid %s....!\n", regionName);
                     exit(0);
                 }
-                // for (int i = 0; regionName[i] != '\0'; i++)
-                // {
-                //     regionName[i] = toupper(regionName[i]);
-                // }
                 system("cls");
                 addHotel(regionName);
                 displayRegionDetails(regionName);
@@ -153,11 +155,6 @@ admin_login:
                     exit(0);
                 }
                 system("cls");
-                // // Convert regionName to uppercase
-                // for (int i = 0; regionName[i] != '\0'; i++)
-                // {
-                //     regionName[i] = toupper(regionName[i]);
-                // }
                 displayRegionDetails(regionName);
                 // Convert regionName to uppercase
                 printf("Enter Hotel to delete   :");
@@ -188,11 +185,6 @@ admin_login:
                     exit(0);
                 }
                 system("cls");
-                // // Convert regionName to uppercase
-                // for (int i = 0; regionName[i] != '\0'; i++)
-                // {
-                //     regionName[i] = toupper(regionName[i]);
-                // }
                 displayRegionDetails(regionName);
                 // Convert regionName to uppercase
                 printf("Enter Hotel to update   :");
@@ -314,6 +306,8 @@ admin_login:
         }
     }
 }
+
+// ADMIN FUCNCTION IMPLEMENTATION
 int validateAdmin(const char *username, const char *passwd)
 {
     // Replace with your admin credentials
@@ -483,148 +477,6 @@ void addHotel(const char *regionName)
     getch();
     system("cls");
 }
-
-int getItemPrice(const char *regionName, const char *hotelName, const char *itemName)
-{
-    char filePath[256];
-    snprintf(filePath, sizeof(filePath), "%s/%s.csv", regionName, hotelName);
-
-    FILE *file = fopen(filePath, "r");
-    if (file == NULL)
-    {
-        printf("Error: Unable to open the menu file for hotel '%s' in region '%s'.\n", hotelName, regionName);
-        return -1; // Return -1 indicating error
-    }
-
-    char line[256];
-    int price = -1; // Default price if not found
-
-    // Loop through each line in the menu file
-    while (fgets(line, sizeof(line), file) != NULL)
-    {
-        // Tokenize the line using commas as delimiters
-        char *token = strtok(line, ",");
-        if (strcmp(token, itemName) == 0) // Compare the item name
-        {
-            // Extract price (second field after two commas)
-            token = strtok(NULL, ","); // Skip first field
-            token = strtok(NULL, ","); // Skip second field
-            if (token != NULL)
-            {
-                price = atoi(token); // Convert string to integer
-                break;               // Item found, break the loop
-            }
-        }
-    }
-
-    fclose(file);
-    return price;
-}
-int getItemTime(const char *regionName, const char *hotelName, const char *itemName)
-{
-    char filePath[256];
-    snprintf(filePath, sizeof(filePath), "%s/%s.csv", regionName, hotelName);
-
-    FILE *file = fopen(filePath, "r");
-    if (file == NULL)
-    {
-        printf("Error: Unable to open the menu file for hotel '%s' in region '%s'.\n", hotelName, regionName);
-        return -1; // Return -1 indicating error
-    }
-
-    char line[256];
-    int time = -1; // Default time if not found
-
-    // Loop through each line in the menu file
-    while (fgets(line, sizeof(line), file) != NULL)
-    {
-        // Tokenize the line using commas as delimiters
-        char *token = strtok(line, ",");
-        if (strcmp(token, itemName) == 0) // Compare the item name
-        {
-            // Extract time (third field after three commas)
-            token = strtok(NULL, ","); // Skip first field
-            token = strtok(NULL, ","); // Skip second field
-            token = strtok(NULL, ","); // Skip third field
-            if (token != NULL)
-            {
-                time = atoi(token); // Convert string to integer
-                break;              // Item found, break the loop
-            }
-        }
-    }
-
-    fclose(file);
-    return time;
-}
-void cart(const char *regionName, const char *hotelName)
-{
-    char itemName[50];
-    int quantity;
-    int totalPrice = 0;
-    int totalTime = 0;
-    char choice;
-    printf("===========================================================================\n");
-    printf("                              ADDING ITEMS TO CART                 \n");
-    printf("===========================================================================\n");
-    // Display hotel menu here (you can reuse the displayHotelMenu function)
-    do
-    {
-        // Clear input buffer
-        int c;
-        while ((c = getchar()) != '\n' && c != EOF)
-            ;
-    Invalid_item:
-    {
-        // Prompt for item name
-        printf("Enter Item Name        :");
-        fgets(itemName, sizeof(itemName), stdin);
-
-        // Remove trailing newline character from itemName
-        if (strlen(itemName) > 0 && itemName[strlen(itemName) - 1] == '\n')
-        {
-            itemName[strlen(itemName) - 1] = '\0';
-        }
-
-        // Convert item name to upper case
-        for (int i = 0; itemName[i] != '\0'; ++i)
-        {
-            itemName[i] = toupper(itemName[i]);
-        }
-        if (!isItemInMenu(regionName, hotelName, itemName))
-        {
-            printf("Item '%s' is not available in the menu.\n", itemName);
-            goto Invalid_item;
-        }
-    }
-        // Prompt for quantity
-        printf("Enter Quantity         :");
-        scanf("%d", &quantity);
-
-        // Calculate total price and time for the item
-        // You need to fetch the price and time for the item from the menu file
-        // Then multiply by the quantity to get the total
-        int itemPrice = getItemPrice(regionName, hotelName, itemName);
-        int itemTime = getItemTime(regionName, hotelName, itemName);
-        int totalItemPrice = itemPrice * quantity;
-        int totalItemTime = itemTime * quantity;
-
-        // Update total price and time for the order
-        totalPrice += totalItemPrice;
-        totalTime += totalItemTime;
-
-        // Ask if user wants to add more items
-        printf("Add another item? (y/n): ");
-        scanf(" %c", &choice);
-    } while (tolower(choice) == 'y');
-
-    // Display total price and time for the order
-    printf("\n=========================================\n");
-    printf("        ORDER SUMMARY\n");
-    printf("-----------------------------------------\n");
-    printf("Total Price: INR %d\n", totalPrice);
-    printf("Total Time: %d mins\n", totalTime);
-}
 void addMenuItem(const char *regionName, const char *hotelName, const char *itemName, const char *type, int price, int time)
 {
     // Construct the file path for the hotel's menu file
@@ -703,7 +555,6 @@ void deleteMenuItem(const char *regionName, const char *hotelName, const char *i
         printf("Item '%s' not found in the menu of hotel '%s' in region '%s'.\n", itemName, hotelName, regionName);
     }
 }
-
 void displayRegionDetails(const char *regionName)
 {
     // Create the file path for the details.csv file in the selected region directory
@@ -814,7 +665,6 @@ void displayHotelMenu(const char *regionName, const char *hotelName)
     // Close the file
     fclose(file);
 }
-
 void deleteHotelFromCSV(const char *regionName, const char *hotelName)
 {
     char filePath[256];
@@ -868,7 +718,8 @@ void deleteHotelFromCSV(const char *regionName, const char *hotelName)
         printf("Hotel '%s' not found in the CSV file %s.\n", hotelName, filePath);
     }
 }
-// user.c
+
+// CUSTOMER CODE
 struct User
 {
     char emailID[MAX_EMAIL_LEN];
@@ -876,13 +727,7 @@ struct User
     char mobileNumber[MAX_MOBILE_LEN];
     char passwd[MAX_PASSWD_LEN];
 };
-
-bool validateEmail(const char *email);
-bool isMobileNumberExist(const char *mobileNumber);
-bool isValidMobileNumber(const char *mobileNumber);
-bool isEmailExist(const char *email);
-bool loginUser(const char *checkMobileNumber, const char *checkPasswd);
-
+//
 void CustomerLogin()
 {
     int choice;
@@ -1023,7 +868,7 @@ Ordering_phase:
     exit(0);
     system("cls");
 }
-
+// ADMIN FUCNCTION IMPLEMENTATION
 // Function to validate email address
 bool validateEmail(const char *email)
 {
@@ -1050,7 +895,6 @@ bool validateEmail(const char *email)
     // If not found, return false
     return false;
 }
-
 bool isMobileNumberExist(const char *mobileNumber)
 {
     FILE *file = fopen("CustomerData.csv", "r");
@@ -1076,7 +920,6 @@ bool isMobileNumberExist(const char *mobileNumber)
     fclose(file);
     return false;
 }
-
 // Function to validate mobile number format
 bool isValidMobileNumber(const char *mobileNumber)
 {
@@ -1094,7 +937,6 @@ bool isValidMobileNumber(const char *mobileNumber)
     }
     return true;
 }
-
 // Function to check if email already exists in the CSV file
 bool isEmailExist(const char *email)
 {
@@ -1127,7 +969,6 @@ bool isEmailExist(const char *email)
     fclose(file);
     return false;
 }
-
 bool loginUser(const char *checkMobileNumber, const char *checkPasswd)
 {
     FILE *file = fopen("CustomerData.csv", "r");
@@ -1164,7 +1005,6 @@ bool loginUser(const char *checkMobileNumber, const char *checkPasswd)
     fclose(file);
     return false; // Mobile number or password doesn't match
 }
-
 bool isItemInMenu(const char *regionName, const char *hotelName, const char *itemName)
 {
     // Construct the file path for the hotel's menu file
@@ -1198,7 +1038,6 @@ bool isItemInMenu(const char *regionName, const char *hotelName, const char *ite
     // Item not found in the menu
     return false;
 }
-
 bool validateHotelExistence(const char *regionName, const char *hotelName)
 {
     // Construct the path for the hotel CSV file
@@ -1210,4 +1049,145 @@ bool validateHotelExistence(const char *regionName, const char *hotelName)
     {
         return true; // Hotel CSV file exists
     }
+}
+int getItemPrice(const char *regionName, const char *hotelName, const char *itemName)
+{
+    char filePath[256];
+    snprintf(filePath, sizeof(filePath), "%s/%s.csv", regionName, hotelName);
+
+    FILE *file = fopen(filePath, "r");
+    if (file == NULL)
+    {
+        printf("Error: Unable to open the menu file for hotel '%s' in region '%s'.\n", hotelName, regionName);
+        return -1; // Return -1 indicating error
+    }
+
+    char line[256];
+    int price = -1; // Default price if not found
+
+    // Loop through each line in the menu file
+    while (fgets(line, sizeof(line), file) != NULL)
+    {
+        // Tokenize the line using commas as delimiters
+        char *token = strtok(line, ",");
+        if (strcmp(token, itemName) == 0) // Compare the item name
+        {
+            // Extract price (second field after two commas)
+            token = strtok(NULL, ","); // Skip first field
+            token = strtok(NULL, ","); // Skip second field
+            if (token != NULL)
+            {
+                price = atoi(token); // Convert string to integer
+                break;               // Item found, break the loop
+            }
+        }
+    }
+
+    fclose(file);
+    return price;
+}
+int getItemTime(const char *regionName, const char *hotelName, const char *itemName)
+{
+    char filePath[256];
+    snprintf(filePath, sizeof(filePath), "%s/%s.csv", regionName, hotelName);
+
+    FILE *file = fopen(filePath, "r");
+    if (file == NULL)
+    {
+        printf("Error: Unable to open the menu file for hotel '%s' in region '%s'.\n", hotelName, regionName);
+        return -1; // Return -1 indicating error
+    }
+
+    char line[256];
+    int time = -1; // Default time if not found
+
+    // Loop through each line in the menu file
+    while (fgets(line, sizeof(line), file) != NULL)
+    {
+        // Tokenize the line using commas as delimiters
+        char *token = strtok(line, ",");
+        if (strcmp(token, itemName) == 0) // Compare the item name
+        {
+            // Extract time (third field after three commas)
+            token = strtok(NULL, ","); // Skip first field
+            token = strtok(NULL, ","); // Skip second field
+            token = strtok(NULL, ","); // Skip third field
+            if (token != NULL)
+            {
+                time = atoi(token); // Convert string to integer
+                break;              // Item found, break the loop
+            }
+        }
+    }
+
+    fclose(file);
+    return time;
+}
+void cart(const char *regionName, const char *hotelName)
+{
+    char itemName[50];
+    int quantity;
+    int totalPrice = 0;
+    int totalTime = 0;
+    char choice;
+    printf("===========================================================================\n");
+    printf("                              ADDING ITEMS TO CART                 \n");
+    printf("===========================================================================\n");
+    // Display hotel menu here (you can reuse the displayHotelMenu function)
+    do
+    {
+        // Clear input buffer
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF)
+            ;
+    Invalid_item:
+    {
+        // Prompt for item name
+        printf("Enter Item Name        :");
+        fgets(itemName, sizeof(itemName), stdin);
+
+        // Remove trailing newline character from itemName
+        if (strlen(itemName) > 0 && itemName[strlen(itemName) - 1] == '\n')
+        {
+            itemName[strlen(itemName) - 1] = '\0';
+        }
+
+        // Convert item name to upper case
+        for (int i = 0; itemName[i] != '\0'; ++i)
+        {
+            itemName[i] = toupper(itemName[i]);
+        }
+        if (!isItemInMenu(regionName, hotelName, itemName))
+        {
+            printf("Item '%s' is not available in the menu.\n", itemName);
+            goto Invalid_item;
+        }
+    }
+        // Prompt for quantity
+        printf("Enter Quantity         :");
+        scanf("%d", &quantity);
+
+        // Calculate total price and time for the item
+        // You need to fetch the price and time for the item from the menu file
+        // Then multiply by the quantity to get the total
+        int itemPrice = getItemPrice(regionName, hotelName, itemName);
+        int itemTime = getItemTime(regionName, hotelName, itemName);
+        int totalItemPrice = itemPrice * quantity;
+        int totalItemTime = itemTime * quantity;
+
+        // Update total price and time for the order
+        totalPrice += totalItemPrice;
+        totalTime += totalItemTime;
+
+        // Ask if user wants to add more items
+        printf("Add another item? (y/n): ");
+        scanf(" %c", &choice);
+    } while (tolower(choice) == 'y');
+
+    // Display total price and time for the order
+    printf("\n=========================================\n");
+    printf("        ORDER SUMMARY\n");
+    printf("-----------------------------------------\n");
+    printf("Total Price: INR %d\n", totalPrice);
+    printf("Total Time: %d mins\n", totalTime);
 }
