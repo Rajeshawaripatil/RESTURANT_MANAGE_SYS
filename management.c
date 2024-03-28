@@ -354,6 +354,7 @@ void listRegions()
     printf("****************************************************\n");
     printf("*                   REGIONS                        *\n");
     printf("****************************************************\n");
+
     WIN32_FIND_DATA findFileData;
     HANDLE hFind = FindFirstFile("*", &findFileData);
     if (hFind == INVALID_HANDLE_VALUE)
@@ -366,7 +367,11 @@ void listRegions()
     {
         if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            printf("Region    : %s\n", findFileData.cFileName);
+            // Check if the length of the folder name is greater than 2
+            if (strlen(findFileData.cFileName) > 2)
+            {
+                printf("Region    : %s\n", findFileData.cFileName);
+            }
         }
     } while (FindNextFile(hFind, &findFileData) != 0);
 
