@@ -3,8 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include <conio.h>  // For _getch() on Windows
-#include <dirent.h> // For directory handling
+#include <conio.h> // For _getch() on Windows
 #include <sys/stat.h>
 
 #define MAX_PASSWD_LEN 50
@@ -46,7 +45,7 @@ bool isMobileNumberExist(const char *mobileNumber);
 bool isValidMobileNumber(const char *mobileNumber);
 bool isEmailExist(const char *email);
 bool loginUser(const char *checkMobileNumber, const char *checkPasswd);
-
+void clearInputBuffer();
 // MAIN CODE:
 int main()
 {
@@ -346,71 +345,49 @@ void getPassword(char *passwd)
     }
     passwd[i] = '\0'; // Null-terminate the password string
 }
+#include <windows.h>
+#include <stdio.h>
+
 void listRegions()
 {
     system("cls");
-    // Open the current directory
-    DIR *dir = opendir(".");
-    if (dir == NULL)
+    printf("****************************************************\n");
+    printf("*                   REGIONS                        *\n");
+    printf("****************************************************\n");
+    WIN32_FIND_DATA findFileData;
+    HANDLE hFind = FindFirstFile("*", &findFileData);
+    if (hFind == INVALID_HANDLE_VALUE)
     {
         printf("Error opening directory.\n");
         return;
     }
-    printf("\n");
-    printf("****************************************************\n");
-    printf("*                SELECT REGIONS                    *\n");
-    printf("****************************************************\n");
-    // Loop through each entry in the directory
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL)
-    {
-        // Check if entry is a directory and not '.' or '..'
-        if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
-        {
-            printf("Region    : %s\n", entry->d_name);
 
-            // Open the region directory
-            DIR *regionDir = opendir(entry->d_name);
-            if (regionDir == NULL)
-            {
-                printf("Error opening region directory.\n");
-                return;
-            }
-            // Close the region directory
-            closedir(regionDir);
+    do
+    {
+        if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            printf("Region    : %s\n", findFileData.cFileName);
         }
-    }
-    printf("----------------------------------------------------\n");
-    // Close the current directory
-    closedir(dir);
+    } while (FindNextFile(hFind, &findFileData) != 0);
+
+    FindClose(hFind);
 }
+
 bool isRegionValid(const char *regionName)
 {
-    // Open the current directory
-    DIR *dir = opendir(".");
-    if (dir == NULL)
+    WIN32_FIND_DATA findFileData;
+    HANDLE hFind = FindFirstFile(regionName, &findFileData);
+    if (hFind != INVALID_HANDLE_VALUE)
     {
-        printf("Error opening current directory.\n");
+        FindClose(hFind);
+        return (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+    }
+    else
+    {
         return false;
     }
-
-    // Iterate through the directory entries
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL)
-    {
-        // Check if the entry is a directory and matches the region name
-        if (entry->d_type == DT_DIR && strcmp(entry->d_name, regionName) == 0)
-        {
-            closedir(dir);
-            return true; // Region directory found
-        }
-    }
-    // Close the directory
-    closedir(dir);
-
-    // Region directory not found
-    return false;
 }
+
 void addHotel(const char *regionName)
 {
     system("cls");
@@ -719,6 +696,13 @@ void deleteHotelFromCSV(const char *regionName, const char *hotelName)
     }
 }
 
+void clearInputBuffer()
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF)
+        ;
+}
+
 // CUSTOMER CODE
 struct User
 {
@@ -774,14 +758,16 @@ void CustomerLogin()
                 printf("Email already exists! Please enter a different email...!");
             }
         } while (!(validateEmail(user.emailID)) || isEmailExist(user.emailID));
+        clearInputBuffer();
 
         printf("Enter Customer Name       :");
         scanf("%s", user.username);
+        clearInputBuffer();
         // Check if the mobile number is valid and does not already exist in the CSV file
         do
         {
             printf("Enter Mobile Number       :");
-            scanf("%s", user.mobileNumber);
+            scanf("%11s", user.mobileNumber);
             if (!isValidMobileNumber(user.mobileNumber))
             {
                 printf("Invalid mobile number! Please enter a 10-digit mobile number.\n");
@@ -790,9 +776,10 @@ void CustomerLogin()
             {
                 printf("Mobile number already exists! Please enter a different mobile number.\n");
             }
-        } while (!isValidMobileNumber(user.mobileNumber) || isMobileNumberExist(user.mobileNumber));
+        } while (!(isValidMobileNumber(user.mobileNumber)) || isMobileNumberExist(user.mobileNumber));
+        clearInputBuffer();
 
-        printf("Enter Password              :");
+        printf("Enter Password            :");
         scanf("%s", user.passwd);
 
         FILE *file = fopen("CustomerData.csv", "a");
@@ -833,7 +820,7 @@ void CustomerLogin()
         getPassword(checkPasswd);
         if (loginUser(checkMobileNumber, checkPasswd))
         {
-            printf("Login successful!\n");
+            printf("\nLogin successful!\n");
             goto Ordering_phase;
         }
         else
@@ -908,9 +895,6 @@ bool isMobileNumberExist(const char *mobileNumber)
     {
         char *token;
         token = strtok(line, ",");
-        // Assuming the mobile number is the third field
-        token = strtok(NULL, ",");
-        token = strtok(NULL, ",");
         if (strcmp(token, mobileNumber) == 0)
         {
             fclose(file);
